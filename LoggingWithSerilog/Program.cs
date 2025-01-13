@@ -1,10 +1,12 @@
 using FluentValidation;
+using LoggingWithSerilog.Data;
 using LoggingWithSerilog.Exceptions;
 using LoggingWithSerilog.Models;
 using LoggingWithSerilog.Services;
 using LoggingWithSerilog.Validators;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Net;
 using System.Security.Cryptography;
@@ -18,8 +20,18 @@ try
     Log.Information("Starting Server.");
     var builder = WebApplication.CreateBuilder(args);
 
+
+    // Add Database Context
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddTransient<IProductService, ProductService>();
+
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
+
+    // In-Memory Caching
+    builder.Services.AddMemoryCache();
 
     builder.Services.AddExceptionHandler<ProductNotFoundExceptionHandler>();
 
@@ -60,6 +72,7 @@ try
     //});
     //Custom Middleware -Global Exception Handling [Old Method]
     //app.UseMiddleware<ErrorHandlerMiddleware>();
+
 
 
     app.UseExceptionHandler();
