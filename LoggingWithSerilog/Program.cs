@@ -33,6 +33,18 @@ try
     // In-Memory Caching
     builder.Services.AddMemoryCache();
 
+    // Distributed Cash with Redis 
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = "localhost";
+        options.ConfigurationOptions = new StackExchange.Redis.ConfigurationOptions()
+        {
+            AbortOnConnectFail = true,
+            EndPoints = { options.Configuration }
+        };
+    });
+
+
     builder.Services.AddExceptionHandler<ProductNotFoundExceptionHandler>();
 
     //builder.Services.AddScoped<IValidator<UserRegistrationRequest>, UserRegistrationValidator>();

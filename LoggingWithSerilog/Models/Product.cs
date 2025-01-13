@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace LoggingWithSerilog.Models;
 
@@ -11,8 +12,10 @@ public class Product
     public decimal? Price { get; set; }
 
     // Parameterless constructor for EF Core
-    private Product() { }
+    public Product() { }
 
+    // Add JsonConstructor attribute if you want to use this constructor for deserialization
+    [JsonConstructor]
     public Product(string name, string description, decimal price)
     {
         Id = Guid.NewGuid();
