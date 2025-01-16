@@ -39,6 +39,7 @@ try
         options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = true;
         options.SignIn.RequireConfirmedEmail = true;
+        options.User.RequireUniqueEmail = true;
     })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();

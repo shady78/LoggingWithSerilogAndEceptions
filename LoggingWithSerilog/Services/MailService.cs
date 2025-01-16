@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace LoggingWithSerilog.Services;
 
@@ -15,6 +16,16 @@ public class MailService : IMailService
         _mailSettings = mailSettings.Value;
     }
 
+    //private async Task<string> GetEmailTemplateAsync(string templateName)
+    //{
+    //    string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", $"{templateName}.html");
+    //    if (!File.Exists(filePath))
+    //    {
+    //        throw new FileNotFoundException($"Email template file not found at path: {filePath}");
+    //    }
+    //    return await File.ReadAllTextAsync(filePath);
+    //}
+
     public async Task SendEmailAsync(MailRequest mailRequest)
     {
         var email = new MimeMessage();
@@ -23,20 +34,13 @@ public class MailService : IMailService
         email.To.Add(MailboxAddress.Parse(mailRequest.ToEmail));
         email.Subject = mailRequest.Subject;
         var builder = new BodyBuilder();
+        builder.HtmlBody = mailRequest.Body;
+
         if (mailRequest.Attachments != null)
         {
             //byte[] fileBytes;
             foreach (var file in mailRequest.Attachments)
             {
-                //if (file.Length > 0)
-                //{
-                //    using (var ms = new MemoryStream())
-                //    {
-                //        file.CopyTo(ms);
-                //        fileBytes = ms.ToArray();
-                //    }
-                //    builder.Attachments.Add(file.FileName, fileBytes, ContentType.Parse(file.ContentType));
-                //}
                 if (file.Length > 0)
                 {
                     builder.Attachments.Add(file.FileName, file.OpenReadStream(), ContentType.Parse(file.ContentType));
