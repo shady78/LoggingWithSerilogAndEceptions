@@ -1,4 +1,5 @@
 using FluentValidation;
+using Hangfire;
 using LoggingWithSerilog.Data;
 using LoggingWithSerilog.Exceptions;
 using LoggingWithSerilog.Models;
@@ -15,6 +16,8 @@ using Serilog;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using Hangfire.PostgreSql;
+
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -25,7 +28,11 @@ try
     Log.Information("Starting Server.");
     var builder = WebApplication.CreateBuilder(args);
 
-   builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+
+  
+
+
+    builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
     // Add Database Context
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -41,8 +48,8 @@ try
         options.SignIn.RequireConfirmedEmail = true;
         options.User.RequireUniqueEmail = true;
     })
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
 
     // Configure JWT authentication
@@ -107,6 +114,16 @@ try
     // Add services to the container.
     builder.Services.AddTransient<IDummyService, DummyService>();
 
+
+
+    
+
+    // Add Hangfire Server
+    builder.Services.AddHangfireServer();
+
+    builder.Services.AddHangfire(x => x.UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddHangfireServer();
+
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
@@ -159,6 +176,9 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Enable Hangfire Dashboard
+    app.UseHangfireDashboard("/mydashboard");
 
     app.UseHttpsRedirection();
 
