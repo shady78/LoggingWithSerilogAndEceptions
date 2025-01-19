@@ -1,4 +1,6 @@
+using LoggingWithSerilog.Settings;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace LoggingWithSerilog.Controllers
 {
@@ -6,51 +8,85 @@ namespace LoggingWithSerilog.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<WeatherForecastController> _logger;
+
+        private readonly WeatherOptions _weatherOptions;
+        private readonly WeatherOptions _optionsSnapshot;
+        private readonly WeatherOptions _optionsMonitor;
+
         private static readonly string[] Summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration,
+            IOptions<WeatherOptions> weatherOptions,
+            IOptionsSnapshot<WeatherOptions> optionsSnapshot, 
+            IOptionsMonitor<WeatherOptions> optionsMonitor)
         {
             _logger = logger;
+            _configuration = configuration;
+            _weatherOptions = weatherOptions.Value;
+            _optionsSnapshot = optionsSnapshot.Value;
+            _optionsMonitor = optionsMonitor.CurrentValue;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        //[HttpGet(Name = "GetWeatherForecast")]
+        //public IEnumerable<WeatherForecast> Get()
+        //{
+        //    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        //    {
+        //        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+        //        TemperatureC = Random.Shared.Next(-20, 55),
+        //        Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        //    })
+        //    .ToArray();
+        //}
+
+
+        [HttpGet("options")]
+        public IActionResult GetFromOptionsPattern()
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var response = new
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                options = new { _weatherOptions.City, _weatherOptions.State, _weatherOptions.Temperature, _weatherOptions.Summary },
+                optionsSnapshot = new { _optionsSnapshot.City, _optionsSnapshot.State, _optionsSnapshot.Temperature, _optionsSnapshot.Summary },
+                optionsMonitor = new { _optionsMonitor.City, _optionsMonitor.State, _optionsMonitor.Temperature, _optionsMonitor.Summary }
+            };
+            return Ok(response);
         }
 
-        //[HttpGet("ThrowException")]
-        //public IActionResult ThrowException()
+
+        //[HttpGet("options")]
+        //public IActionResult GetFromOptionsPattern()
         //{
-        //    throw new Exception();
+        //    return Ok(new
+        //    {
+        //        _weatherOptions.City,
+        //        _weatherOptions.State,
+        //        _weatherOptions.Temperature,
+        //        _weatherOptions.Summary
+        //    });
         //}
 
-        //// Exception: Try-Catch
-        //[HttpGet("GetTest")]
-        //public IActionResult GetTest()
-        //{
-            
-        //    try
+        //[HttpGet("config")]
+        //    public IActionResult GetTest()
         //    {
-        //        var data = Get(); //Assume you get some data here which is also likely to throw an exception in certain cases.
-        //        return Ok(data);
+        //        var city = _configuration.GetValue<string>("WeatherOptions:City");
+        //        var state = _configuration.GetValue<string>("WeatherOptions:State");
+        //        var temperature = _configuration.GetValue<int>("WeatherOptions:Temperature");
+        //        var summary = _configuration.GetValue<string>("WeatherOptions:Summary");
+        //        return Ok(new
+        //        {
+        //            City = city,
+        //            State = state,
+        //            Temperature = temperature,
+        //            Summary = summary
+        //        });
         //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex.Message);
-        //        return StatusCode(500);
-        //    }
-        //}
     }
+    
 }
+

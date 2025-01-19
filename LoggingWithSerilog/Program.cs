@@ -29,7 +29,6 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
 
-  
 
 
     builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
@@ -125,6 +124,19 @@ try
     builder.Services.AddHangfireServer();
 
     builder.Services.AddControllers();
+
+    //builder.Services.AddOptions<WeatherOptions>()
+    //    .BindConfiguration(nameof(WeatherOptions))
+    //    .ValidateDataAnnotations()
+    //    .ValidateOnStart();
+    // Custome Validation
+    builder.Services.AddOptions<WeatherOptions>().BindConfiguration(nameof(WeatherOptions))
+    .Validate(options =>
+    {
+        if (options.State != "Kerala") return false;
+        return true;
+    });
+
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
